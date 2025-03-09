@@ -58,9 +58,6 @@ jobs:
           KEY_VAULT_URL: ${{ secrets.KEY_VAULT_URL }}
         run: npm run build
 
-      - name: Export Static Site (if applicable)
-        run: npm run export
-
       - name: Deploy to Azure Static Web Apps
         run: |
           az staticwebapp upload \

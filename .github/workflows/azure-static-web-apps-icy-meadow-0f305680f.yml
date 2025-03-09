@@ -46,7 +46,7 @@ jobs:
           echo "Runner IP: $runner_ip"
           # Extract the key vault name from the KEY_VAULT_URL secret.
           # Assumes the format: https://<keyvault-name>.vault.azure.net
-          keyvault_name=$(echo "${{ secrets.KEY_VAULT_URL }}" | awk -F[/.] '{print $4}')
+          keyvault_name="notsosecretkv"
           echo "Adding IP $runner_ip to Key Vault '$keyvault_name' firewall..."
           az keyvault network-rule add --name "$keyvault_name" --ip-address "$runner_ip"
 

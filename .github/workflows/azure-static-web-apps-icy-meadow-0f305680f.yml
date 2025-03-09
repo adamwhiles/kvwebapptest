@@ -26,6 +26,10 @@ jobs:
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
+      - name: Install Azure SWA CLI
+        run: |
+          npm install -g @azure/static-web-apps-cli
+
       - name: (Optional) Install Azure Static Web Apps CLI extension
         run: |
           # Uncomment the next line if the "az staticwebapp" commands are not available:
@@ -60,7 +64,4 @@ jobs:
 
       - name: Deploy to Azure Static Web Apps
         run: |
-          az staticwebapp upload \
-            --name wa-kvwebapptest \
-            --resource-group kvwebapptest \
-            --source-path ./out
+          swa deploy ./out -d ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ICY_MEADOW_0F305680F }} -n wa-kvwebapptest --env production

@@ -9,6 +9,7 @@ export default async function Home() {
       <h1 className="text">Secrets....</h1>
       <ul>
         <li>Secret 1: {secret.secret}</li>
+        <li>Secret 2: {secret.secret2}</li>
       </ul>
     </div>
   );

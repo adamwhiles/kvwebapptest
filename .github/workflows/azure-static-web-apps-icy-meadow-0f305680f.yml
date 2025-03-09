@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     # Run the entire job in a container so that the Azure CLI login context persists
     container:
-      image: node:16-bullseye
+      image: node:20-bullseye
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3

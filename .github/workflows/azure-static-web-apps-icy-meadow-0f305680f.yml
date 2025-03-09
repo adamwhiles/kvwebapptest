@@ -43,6 +43,8 @@ jobs:
         run: npm install
 
       - name: Build Next.js App
+        env:
+          KEY_VAULT_URL: ${{ secrets.KEY_VAULT_URL }}
         run: npm run build
 
       - name: Export Static Site (if applicable)

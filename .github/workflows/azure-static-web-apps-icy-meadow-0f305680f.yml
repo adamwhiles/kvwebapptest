@@ -11,43 +11,49 @@ on:
 
 jobs:
   build_and_deploy_job:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
-    name: Build and Deploy Job
+    # Run the entire job in a container so that the Azure CLI login context persists
+    container:
+      image: node:16-bullseye
     steps:
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          creds: ${{secrets.AZURE_CREDENTIALS}}
-
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
         with:
           submodules: true
           lfs: false
-      - name: Build And Deploy
-        env:
-          KEY_VAULT_URL: ${{secrets.KEY_VAULT_URL}}
-        id: builddeploy
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ICY_MEADOW_0F305680F }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
-          action: "upload"
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "/" # App source code path
-          api_location: "" # Api source code path - optional
-          output_location: "" # Built app content directory - optional
-          ###### End of Repository/Build Configurations ######
 
-  close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    name: Close Pull Request Job
-    steps:
-      - name: Close Pull Request
-        id: closepullrequest
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_ICY_MEADOW_0F305680F }}
-          action: "close"
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
+      - name: (Optional) Install Azure Static Web Apps CLI extension
+        run: |
+          # If the "az staticwebapp" commands are not available, uncomment the next line:
+          # az extension add --name azure-swa
+          echo "Azure Static Web Apps extension (if needed) installed."
+
+      - name: Azure Login
+        run: |
+          az login --service-principal \
+            --username "${{ secrets.AZURE_CLIENT_ID }}" \
+            --password "${{ secrets.AZURE_CLIENT_SECRET }}" \
+            --tenant "${{ secrets.AZURE_TENANT_ID }}"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Next.js App
+        run: npm run build
+
+      - name: Export Static Site (if applicable)
+        # If you use a static export (e.g. next export), generate the static files (commonly to an 'out' folder)
+        run: npm run export
+
+      - name: Deploy to Azure Static Web Apps
+        run: |
+          # This command uses the Azure CLI to upload your static site.
+          # Adjust --source-path to the folder that contains your static output (e.g. "./out")
+          az staticwebapp upload \
+            --name wa-kvwebapptest \
+            --resource-group kvwebapptest \
+            --source-path ./out

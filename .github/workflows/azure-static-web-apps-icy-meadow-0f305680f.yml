@@ -12,7 +12,7 @@ on:
 jobs:
   build_and_deploy_job:
     runs-on: ubuntu-latest
-    # Run the entire job in a container so that the Azure CLI login context persists
+    # Run all steps in the same container so that the Azure CLI login context persists
     container:
       image: node:20-bullseye
     steps:
@@ -28,7 +28,7 @@ jobs:
 
       - name: (Optional) Install Azure Static Web Apps CLI extension
         run: |
-          # If the "az staticwebapp" commands are not available, uncomment the next line:
+          # Uncomment the next line if the "az staticwebapp" commands are not available:
           # az extension add --name azure-swa
           echo "Azure Static Web Apps extension (if needed) installed."
 
@@ -39,6 +39,17 @@ jobs:
             --password "${{ secrets.AZURE_CLIENT_SECRET }}" \
             --tenant "${{ secrets.AZURE_TENANT_ID }}"
 
+      - name: Add GitHub Runner IP to Key Vault Firewall
+        run: |
+          echo "Fetching public IP of the GitHub runner..."
+          runner_ip=$(curl -s https://api.ipify.org)
+          echo "Runner IP: $runner_ip"
+          # Extract the key vault name from the KEY_VAULT_URL secret.
+          # Assumes the format: https://<keyvault-name>.vault.azure.net
+          keyvault_name=$(echo "${{ secrets.KEY_VAULT_URL }}" | awk -F[/.] '{print $4}')
+          echo "Adding IP $runner_ip to Key Vault '$keyvault_name' firewall..."
+          az keyvault network-rule add --name "$keyvault_name" --ip-address "$runner_ip"
+
       - name: Install Dependencies
         run: npm install
 
@@ -48,13 +59,10 @@ jobs:
         run: npm run build
 
       - name: Export Static Site (if applicable)
-        # If you use a static export (e.g. next export), generate the static files (commonly to an 'out' folder)
         run: npm run export
 
       - name: Deploy to Azure Static Web Apps
         run: |
-          # This command uses the Azure CLI to upload your static site.
-          # Adjust --source-path to the folder that contains your static output (e.g. "./out")
           az staticwebapp upload \
             --name wa-kvwebapptest \
             --resource-group kvwebapptest \

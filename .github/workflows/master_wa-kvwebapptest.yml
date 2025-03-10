@@ -47,6 +47,8 @@ jobs:
         run: |
           npm install
           npm run build
+          mv ./build/static ./build/standalone/build
+          mv ./public ./build/standalone
 #          npm run test --if-present
 
       - name: Zip for deployment
@@ -64,6 +66,9 @@ jobs:
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -86,4 +91,4 @@ jobs:
           app-name: 'wa-kvwebapptest'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_A48C70623F574A8FB3F39682FF9E607D }}
-          package: ./.next/standalone
+          package: ./build/standalone

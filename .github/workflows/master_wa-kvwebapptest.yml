@@ -12,23 +12,23 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: node:20-bullseye
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
         with:
-          node-version: '20.x'
+          submodules: true
+          lfs: false
+
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
       - name: Login to Azure
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Install Azure CLI
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | bash
 
       - name: Add GitHub Runner IP to Key Vault Firewall
         run: |

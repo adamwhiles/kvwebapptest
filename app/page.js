@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { getSecrets } from "./actions/getSecrets";
-
+export const dynamic = "force-dynamic";
 export default async function Home() {
   const secret = await getSecrets();
   console.log(secret);

@@ -12,11 +12,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: node:20-bullseye
     permissions:
       contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Add GitHub Runner IP to Key Vault Firewall
+        run: |
+          echo "Fetching public IP of the GitHub runner..."
+          runner_ip=$(curl -s https://api.ipify.org)
+          echo "Runner IP: $runner_ip"
+          # Extract the key vault name from the KEY_VAULT_URL secret.
+          # Assumes the format: https://<keyvault-name>.vault.azure.net
+          keyvault_name="notsosecretkv"
+          echo "Adding IP $runner_ip to Key Vault '$keyvault_name' firewall..."
+          az keyvault network-rule add --name "$keyvault_name" --ip-address "$runner_ip"
 
       - name: Set up Node.js version
         uses: actions/setup-node@v3
@@ -24,10 +46,14 @@ jobs:
           node-version: '20.x'
 
       - name: npm install, build, and test
+        env:
+          KEY_VAULT_URL: ${{ secrets.KEY_VAULT_URL }}
         run: |
           npm install
           npm run build --if-present
           npm run test --if-present
+          mv ./build/static ./build/standalone/build
+          mv ./public ./build/standalone
 
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
@@ -70,5 +96,5 @@ jobs:
         with:
           app-name: 'wa-kvwebapptest'
           slot-name: 'Production'
-          package: .
+          package: ./build/standalone
           

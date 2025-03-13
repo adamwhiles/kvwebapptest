@@ -8,21 +8,17 @@ export async function getSecrets() {
   let secret = "";
   let secret2 = "";
   try {
-    secret = await client.getSecret("supersecretsecret");
+    secret = await client.getSecret(process.env.SECRET_1);
   } catch (error) {
-    secret = error;
+    console.log("Error: Unable to retrieve secret.");
   }
   try {
-    secret2 = await client.getSecret("supersecretsecret2");
+    secret2 = await client.getSecret(process.env.SECRET_2);
   } catch (error) {
-    secret2 = error;
+    console.log("Error: Unable to retrieve secret");
   }
-
-  console.log(secret.value);
-  console.log(secret2.value);
-
   return {
-    secret: secret.value || secret.message,
-    secret2: secret2.value || secret2.message,
+    secret: secret.value || "Error: Unable to retrieve secret.",
+    secret2: secret2.value || "Error: Unable to retrieve secret.",
   };
 }

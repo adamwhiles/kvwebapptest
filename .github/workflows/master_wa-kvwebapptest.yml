@@ -33,11 +33,8 @@ jobs:
         run: |
           echo "Fetching public IP of the GitHub runner..."
           runner_ip=$(curl -s https://api.ipify.org)
-          echo "Runner IP: $runner_ip"
-          # Extract the key vault name from the KEY_VAULT_URL secret.
-          # Assumes the format: https://<keyvault-name>.vault.azure.net
-          keyvault_name="notsosecretkv"
-          echo "Adding IP $runner_ip to Key Vault '$keyvault_name' firewall..."
+          keyvault_name=${{ secrets.KEY_VAULT_NAME }}
+          echo "Adding IP to Key Vault firewall..."
           az keyvault network-rule add --name "$keyvault_name" --ip-address "$runner_ip"
 
       - name: Set up Node.js version
@@ -96,7 +93,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'wa-kvwebapptest'
+          app-name: ${{ secrets.WEB_APP_NAME }}
           slot-name: 'Production'
           package: ./build/standalone
           
